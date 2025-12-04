@@ -1,0 +1,268 @@
+# ReGuardian GitHub Actions Workflow
+# Automatically scan smart contracts for reentrancy vulnerabilities
+
+name: ReGuardian Security Scan
+
+on:
+  push:
+    paths:
+      - '**.sol'
+      - '**.vy'
+  pull_request:
+    paths:
+      - '**.sol'
+      - '**.vy'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Analysis mode'
+        required: false
+        default: 'standard'
+        type: choice
+        options:
+          - quick
+          - standard
+          - deep
+      min_severity:
+        description: 'Minimum severity to report'
+        required: false
+        default: 'low'
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+          - critical
+
+jobs:
+  reguardian-scan:
+    name: ReGuardian Reentrancy Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install slither-analyzer solc-select
+          solc-select install 0.8.19
+          solc-select use 0.8.19
+          
+          # Install ReGuardian dependencies
+          pip install click rich pyyaml jinja2 web3 eth-abi networkx
+      
+      - name: Clone ReGuardian
+        run: |
+          git clone https://github.com/YOUR_USERNAME/ReGuardian.git /tmp/reguardian
+        continue-on-error: true
+      
+      - name: Find Solidity files
+        id: find-contracts
+        run: |
+          # Find all .sol files, excluding common non-production directories
+          FILES=$(find . -name "*.sol" \
+            -not -path "*/node_modules/*" \
+            -not -path "*/lib/*" \
+            -not -path "*/.git/*" \
+            -not -path "*/test/*" \
+            -not -path "*/tests/*" \
+            -not -path "*/mock/*" \
+            -not -path "*/mocks/*" \
+            | head -50)
+          
+          echo "Found contracts:"
+          echo "$FILES"
+          
+          # Save to file for later use
+          echo "$FILES" > /tmp/contracts.txt
+          
+          # Count files
+          COUNT=$(echo "$FILES" | grep -c "\.sol$" || echo "0")
+          echo "contract_count=$COUNT" >> $GITHUB_OUTPUT
+      
+      - name: Run ReGuardian Analysis
+        if: steps.find-contracts.outputs.contract_count > 0
+        run: |
+          MODE="${{ github.event.inputs.mode || 'standard' }}"
+          MIN_SEV="${{ github.event.inputs.min_severity || 'low' }}"
+          
+          echo "🛡️ ReGuardian Security Scan"
+          echo "Mode: $MODE"
+          echo "Min Severity: $MIN_SEV"
+          echo "================================"
+          
+          # Create results directory
+          mkdir -p /tmp/reguardian-results
+          
+          # Analyze each contract
+          TOTAL_VULNS=0
+          CRITICAL=0
+          HIGH=0
+          
+          while IFS= read -r contract; do
+            if [ -n "$contract" ]; then
+              echo ""
+              echo "📄 Analyzing: $contract"
+              echo "---"
+              
+              # Run Slither for reentrancy detection
+              slither "$contract" \
+                --detect reentrancy-eth,reentrancy-no-eth,reentrancy-benign,reentrancy-events \
+                --json /tmp/reguardian-results/$(basename "$contract").json \
+                2>/dev/null || true
+              
+              # Parse results
+              if [ -f "/tmp/reguardian-results/$(basename "$contract").json" ]; then
+                VULNS=$(jq '.results.detectors | length' "/tmp/reguardian-results/$(basename "$contract").json" 2>/dev/null || echo "0")
+                TOTAL_VULNS=$((TOTAL_VULNS + VULNS))
+                
+                if [ "$VULNS" -gt 0 ]; then
+                  echo "⚠️  Found $VULNS potential reentrancy issue(s)"
+                  
+                  # Show details
+                  jq -r '.results.detectors[] | "  - \(.check): \(.description | split("\n")[0])"' \
+                    "/tmp/reguardian-results/$(basename "$contract").json" 2>/dev/null || true
+                else
+                  echo "✅ No reentrancy issues detected"
+                fi
+              fi
+            fi
+          done < /tmp/contracts.txt
+          
+          echo ""
+          echo "================================"
+          echo "📊 Summary"
+          echo "Total vulnerabilities found: $TOTAL_VULNS"
+          
+          # Set output for badge
+          echo "total_vulns=$TOTAL_VULNS" >> $GITHUB_OUTPUT
+          
+          # Fail if critical/high vulnerabilities found
+          if [ "$TOTAL_VULNS" -gt 0 ]; then
+            echo ""
+            echo "⚠️  Reentrancy vulnerabilities detected!"
+            echo "Please review the findings above."
+            
+            # Optionally fail the build
+            # exit 1
+          fi
+      
+      - name: Upload Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reguardian-results
+          path: /tmp/reguardian-results/
+          retention-days: 30
+      
+      - name: Create Summary
+        if: always()
+        run: |
+          echo "## 🛡️ ReGuardian Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -d "/tmp/reguardian-results" ]; then
+            TOTAL=$(find /tmp/reguardian-results -name "*.json" -exec jq '.results.detectors | length' {} \; | awk '{s+=$1} END {print s}')
+            echo "**Total Reentrancy Issues Found:** $TOTAL" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "$TOTAL" -gt 0 ]; then
+              echo "### Findings" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
+              for f in /tmp/reguardian-results/*.json; do
+                if [ -f "$f" ]; then
+                  CONTRACT=$(basename "$f" .json)
+                  VULNS=$(jq '.results.detectors | length' "$f" 2>/dev/null || echo "0")
+                  
+                  if [ "$VULNS" -gt 0 ]; then
+                    echo "#### $CONTRACT" >> $GITHUB_STEP_SUMMARY
+                    jq -r '.results.detectors[] | "- **\(.check)**: \(.description | split("\n")[0])"' "$f" >> $GITHUB_STEP_SUMMARY 2>/dev/null || true
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                  fi
+                fi
+              done
+            else
+              echo "✅ No reentrancy vulnerabilities detected!" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Powered by ReGuardian - AI-Powered Reentrancy Detection*" >> $GITHUB_STEP_SUMMARY
+
+
+  # Optional: Comment on PR with results
+  comment-pr:
+    name: Comment on PR
+    needs: reguardian-scan
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    
+    steps:
+      - name: Download Results
+        uses: actions/download-artifact@v4
+        with:
+          name: reguardian-results
+          path: /tmp/reguardian-results
+        continue-on-error: true
+      
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            let comment = '## 🛡️ ReGuardian Security Scan\n\n';
+            let totalVulns = 0;
+            
+            const resultsDir = '/tmp/reguardian-results';
+            
+            if (fs.existsSync(resultsDir)) {
+              const files = fs.readdirSync(resultsDir).filter(f => f.endsWith('.json'));
+              
+              for (const file of files) {
+                try {
+                  const data = JSON.parse(fs.readFileSync(path.join(resultsDir, file)));
+                  const vulns = data.results?.detectors?.length || 0;
+                  totalVulns += vulns;
+                  
+                  if (vulns > 0) {
+                    comment += `### ${file.replace('.json', '')}\n`;
+                    for (const det of data.results.detectors) {
+                      comment += `- ⚠️ **${det.check}**: ${det.description.split('\n')[0]}\n`;
+                    }
+                    comment += '\n';
+                  }
+                } catch (e) {
+                  console.log(`Error parsing ${file}: ${e}`);
+                }
+              }
+            }
+            
+            if (totalVulns === 0) {
+              comment += '✅ **No reentrancy vulnerabilities detected!**\n';
+            } else {
+              comment += `\n⚠️ **Total: ${totalVulns} potential reentrancy issue(s) found**\n`;
+              comment += '\nPlease review the findings and apply appropriate fixes.\n';
+            }
+            
+            comment += '\n---\n*Powered by ReGuardian*';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

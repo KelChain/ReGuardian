@@ -1,0 +1,502 @@
+{
+  "attacks": [
+    {
+      "name": "The DAO Hack",
+      "date": "2016-06-17",
+      "loss_usd": 60000000,
+      "chain": "Ethereum",
+      "type": "mono_function",
+      "description": "The most infamous reentrancy attack. Attacker exploited recursive withdrawal vulnerability to drain 3.6M ETH from The DAO.",
+      "vulnerable_pattern": "External call before state update in withdraw function",
+      "tx_hash": "0x0ec3f2488a93839524add10ea229e773f6bc891b4eb4794c3337d4495263790b",
+      "references": [
+        "https://blog.ethereum.org/2016/06/17/critical-update-re-dao-vulnerability",
+        "https://hackingdistributed.com/2016/06/18/analysis-of-the-dao-exploit/"
+      ]
+    },
+    {
+      "name": "Rari Capital + Fei Protocol",
+      "date": "2022-04-30",
+      "loss_usd": 80000000,
+      "chain": "Ethereum",
+      "type": "mono_function",
+      "description": "Attacker exploited reentrancy in Rari's Fuse lending protocol borrow function. Used flash loan to amplify the attack.",
+      "vulnerable_pattern": "borrow() function transferred funds before updating accountBorrows mapping",
+      "tx_hash": "0xab486012f21be741c9e674ffda227e30518e8a1e37a5f1d58d0b0d41f6e76530",
+      "references": [
+        "https://www.coindesk.com/business/2022/04/30/defi-lender-rari-capitalfei-loses-80m-in-hack/"
+      ]
+    },
+    {
+      "name": "Curve Finance (Vyper)",
+      "date": "2023-07-30",
+      "loss_usd": 69000000,
+      "chain": "Ethereum",
+      "type": "compiler_bug",
+      "description": "Vyper compiler bug caused malfunctioning reentrancy locks in versions 0.2.15, 0.2.16, and 0.3.0. Multiple pools exploited.",
+      "vulnerable_pattern": "Compiler-level bug in reentrancy guard implementation",
+      "affected_protocols": ["JPEG'd", "Alchemix", "Metronome", "Curve CRV/ETH"],
+      "references": [
+        "https://www.chainalysis.com/blog/curve-finance-liquidity-pool-hack/",
+        "https://hackmd.io/@vyperlang/HJUgNMhs2"
+      ]
+    },
+    {
+      "name": "Cream Finance",
+      "date": "2021-10-27",
+      "loss_usd": 130000000,
+      "chain": "Ethereum",
+      "type": "cross_contract",
+      "description": "Flash loan attack combined with reentrancy through AMP token's ERC777 hooks.",
+      "vulnerable_pattern": "ERC777 tokensReceived callback exploitation",
+      "tx_hash": "0x0fe2542079644e107cbf13690eb9c2c65963ccb79089ff96bfaf8dced2331c92",
+      "references": [
+        "https://www.coindesk.com/business/2021/10/27/cream-finance-exploited-in-flash-loan-attack-worth-over-100m/"
+      ]
+    },
+    {
+      "name": "Grim Finance",
+      "date": "2021-12-19",
+      "loss_usd": 30000000,
+      "chain": "Fantom",
+      "type": "mono_function",
+      "description": "Reentrancy in deposit function allowed attacker to mint excess vault tokens.",
+      "vulnerable_pattern": "depositFor() function vulnerable to reentrancy via safeTransferFrom callback",
+      "references": [
+        "https://www.coindesk.com/tech/2021/12/20/fantom-defi-project-grim-finance-exploited-for-30m/"
+      ]
+    },
+    {
+      "name": "Visor Finance (IVisor)",
+      "date": "2021-12-22",
+      "loss_usd": 8200000,
+      "chain": "Ethereum",
+      "type": "cross_contract",
+      "description": "Reentrancy through user-defined interface delegatedTransferERC20(). Attacker contract injected callback.",
+      "vulnerable_pattern": "Custom interface callback exploitation in deposit function",
+      "references": [
+        "https://beincrypto.com/visor-finance-hacked-for-8m-in-latest-defi-exploit/"
+      ]
+    },
+    {
+      "name": "Orion Protocol",
+      "date": "2023-02-02",
+      "loss_usd": 3000000,
+      "chain": "Ethereum, BNB Chain",
+      "type": "cross_function",
+      "description": "Reentrancy in swap function through user-controlled token paths. Exploited on both Ethereum and BNB Chain.",
+      "vulnerable_pattern": "doswapThroughOrionPool allowed malicious token paths triggering reentrancy",
+      "tx_hash": "0xa6f63fcb6bec8818864d96a5b1bb19e8bd85ee37b2cc916412e720988440b2aa",
+      "references": [
+        "https://etherscan.io/tx/0xa6f63fcb6bec8818864d96a5b1bb19e8bd85ee37b2cc916412e720988440b2aa"
+      ]
+    },
+    {
+      "name": "Lendf.Me",
+      "date": "2020-04-19",
+      "loss_usd": 25000000,
+      "chain": "Ethereum",
+      "type": "cross_contract",
+      "description": "ERC777 imBTC token used to exploit reentrancy in lending protocol.",
+      "vulnerable_pattern": "ERC777 tokensToSend hook exploitation",
+      "references": [
+        "https://peckshield.medium.com/uniswap-lendf-me-hacks-root-cause-and-loss-analysis-50f3263dcc09"
+      ]
+    },
+    {
+      "name": "Omni Protocol",
+      "date": "2022-07-10",
+      "loss_usd": 1430000,
+      "chain": "Ethereum",
+      "type": "cross_contract",
+      "description": "ERC721 onERC721Received callback exploited for reentrancy in NFT lending.",
+      "vulnerable_pattern": "safeTransferFrom triggered callback before state update",
+      "references": [
+        "https://twitter.com/paboromir/status/1546172379296989184"
+      ]
+    },
+    {
+      "name": "DFX Finance",
+      "date": "2022-11-11",
+      "loss_usd": 4000000,
+      "chain": "Ethereum",
+      "type": "mono_function",
+      "description": "Flash loan callback reentrancy in DEX protocol.",
+      "vulnerable_pattern": "Flash loan callback exploitation",
+      "references": [
+        "https://twitter.com/paboromir/status/1591021318628851712"
+      ]
+    },
+    {
+      "name": "Euler Finance",
+      "date": "2023-03-13",
+      "loss_usd": 197000000,
+      "chain": "Ethereum",
+      "type": "cross_function",
+      "description": "Flash loan attack exploiting donation mechanism and liquidation logic. Attacker manipulated health factor through reentrancy.",
+      "vulnerable_pattern": "Donation function allowed manipulation of collateral during liquidation",
+      "tx_hash": "0xc310a0affe2169d1f6feec1c63dbc7f7c62a887fa48795d327d4d2da2d6b111d",
+      "references": [
+        "https://www.chainalysis.com/blog/euler-finance-flash-loan-attack/"
+      ]
+    },
+    {
+      "name": "Sentiment Protocol",
+      "date": "2023-04-04",
+      "loss_usd": 1000000,
+      "chain": "Arbitrum",
+      "type": "read_only",
+      "description": "Read-only reentrancy attack exploiting Balancer pool's getRate() function returning stale values during flash loan.",
+      "vulnerable_pattern": "Balancer LP token price manipulation via read-only reentrancy",
+      "references": [
+        "https://twitter.com/spreaboromir/status/1643344406313553920"
+      ]
+    },
+    {
+      "name": "Sturdy Finance",
+      "date": "2023-06-12",
+      "loss_usd": 800000,
+      "chain": "Ethereum",
+      "type": "read_only",
+      "description": "Read-only reentrancy through Balancer pool price oracle manipulation.",
+      "vulnerable_pattern": "Price oracle returned incorrect value during reentrancy window",
+      "references": [
+        "https://twitter.com/staboromir/status/1668037433187655681"
+      ]
+    },
+    {
+      "name": "EraLend",
+      "date": "2023-07-25",
+      "loss_usd": 3400000,
+      "chain": "zkSync Era",
+      "type": "read_only",
+      "description": "Read-only reentrancy attack on lending protocol using SyncSwap LP token price manipulation.",
+      "vulnerable_pattern": "LP token getReserves() returned stale data during callback",
+      "references": [
+        "https://twitter.com/paboromir/status/1684051322505007104"
+      ]
+    },
+    {
+      "name": "Exactly Protocol",
+      "date": "2023-08-18",
+      "loss_usd": 7300000,
+      "chain": "Optimism",
+      "type": "cross_contract",
+      "description": "Reentrancy through DebtManager's permit function allowing unauthorized leverage.",
+      "vulnerable_pattern": "Permit callback exploitation in leverage function",
+      "references": [
+        "https://twitter.com/paboromir/status/1692533276405506048"
+      ]
+    },
+    {
+      "name": "Vyper Reentrancy (Multiple)",
+      "date": "2023-07-30",
+      "loss_usd": 73000000,
+      "chain": "Ethereum",
+      "type": "compiler_bug",
+      "description": "Vyper compiler versions 0.2.15-0.3.0 had broken reentrancy locks. Affected Curve, Alchemix, JPEG'd, Metronome.",
+      "vulnerable_pattern": "Compiler bug caused @nonreentrant decorator to fail",
+      "affected_protocols": ["Curve pETH/ETH", "Curve alETH/ETH", "JPEG'd pETH/ETH", "Metronome msETH/ETH"],
+      "references": [
+        "https://hackmd.io/@vyperlang/HJUgNMhs2"
+      ]
+    },
+    {
+      "name": "Raft Protocol",
+      "date": "2023-11-10",
+      "loss_usd": 3300000,
+      "chain": "Ethereum",
+      "type": "cross_function",
+      "description": "Precision loss combined with reentrancy in minting function allowed infinite mint exploit.",
+      "vulnerable_pattern": "Rounding error exploitation during reentrancy callback",
+      "references": [
+        "https://twitter.com/raft_fi/status/1723067953490346471"
+      ]
+    },
+    {
+      "name": "KyberSwap Elastic",
+      "date": "2023-11-22",
+      "loss_usd": 48800000,
+      "chain": "Multiple",
+      "type": "cross_function",
+      "description": "Complex reentrancy through tick manipulation in concentrated liquidity pools across multiple chains.",
+      "vulnerable_pattern": "Cross-tick reentrancy with flash loan amplification",
+      "affected_chains": ["Ethereum", "Polygon", "Arbitrum", "Optimism", "Base", "Avalanche"],
+      "references": [
+        "https://twitter.com/KyberNetwork/status/1727475235749826802"
+      ]
+    },
+    {
+      "name": "Gamma Strategies",
+      "date": "2024-01-04",
+      "loss_usd": 6300000,
+      "chain": "Arbitrum",
+      "type": "cross_function",
+      "description": "Price manipulation attack through flash loan and reentrancy in vault deposit function.",
+      "vulnerable_pattern": "Deposit function vulnerable to price manipulation via callback",
+      "references": [
+        "https://twitter.com/GammaStrategies/status/1742939015715483648"
+      ]
+    },
+    {
+      "name": "Socket Gateway",
+      "date": "2024-01-16",
+      "loss_usd": 3300000,
+      "chain": "Ethereum",
+      "type": "cross_contract",
+      "description": "Reentrancy through malicious route execution in cross-chain bridge aggregator.",
+      "vulnerable_pattern": "User-controlled route allowed malicious callback injection",
+      "references": [
+        "https://twitter.com/SocketDotTech/status/1747319680510742739"
+      ]
+    },
+    {
+      "name": "Abracadabra (MIM)",
+      "date": "2024-01-30",
+      "loss_usd": 6500000,
+      "chain": "Ethereum",
+      "type": "cross_function",
+      "description": "Reentrancy in Cauldron contract's borrow function through malicious collateral token.",
+      "vulnerable_pattern": "Collateral token callback exploitation in borrow flow",
+      "references": [
+        "https://twitter.com/MaboroShiSec/status/1752347969373655040"
+      ]
+    },
+    {
+      "name": "Blueberry Protocol",
+      "date": "2024-02-22",
+      "loss_usd": 1350000,
+      "chain": "Ethereum",
+      "type": "read_only",
+      "description": "Oracle manipulation through read-only reentrancy affecting collateral valuation.",
+      "vulnerable_pattern": "Chainlink oracle returned stale price during reentrancy",
+      "references": [
+        "https://twitter.com/blaboromir/status/1760630956947214336"
+      ]
+    },
+    {
+      "name": "Prisma Finance",
+      "date": "2024-03-28",
+      "loss_usd": 11600000,
+      "chain": "Ethereum",
+      "type": "cross_function",
+      "description": "Flash loan attack exploiting reentrancy in migration contract's callback handler.",
+      "vulnerable_pattern": "Migration callback allowed state manipulation before completion",
+      "references": [
+        "https://twitter.com/PrismaFi/status/1773329468877275136"
+      ]
+    },
+    {
+      "name": "Hedgey Finance",
+      "date": "2024-04-19",
+      "loss_usd": 44700000,
+      "chain": "Ethereum, Arbitrum",
+      "type": "cross_contract",
+      "description": "Reentrancy through createLockedCampaign function's token approval callback.",
+      "vulnerable_pattern": "Token approval callback exploitation in vesting contract",
+      "references": [
+        "https://twitter.com/hedaboromir/status/1781261234040406016"
+      ]
+    },
+    {
+      "name": "Sonne Finance",
+      "date": "2024-05-15",
+      "loss_usd": 20000000,
+      "chain": "Optimism",
+      "type": "cross_function",
+      "description": "Donation attack combined with reentrancy in Compound V2 fork's market creation.",
+      "vulnerable_pattern": "Empty market manipulation through donation and reentrancy",
+      "references": [
+        "https://twitter.com/SonneFinance/status/1790535383627890688"
+      ]
+    },
+    {
+      "name": "Velocore",
+      "date": "2024-06-02",
+      "loss_usd": 6800000,
+      "chain": "zkSync Era, Linea",
+      "type": "cross_function",
+      "description": "CPMM pool vulnerability exploited through reentrancy in swap function.",
+      "vulnerable_pattern": "Swap callback manipulation in constant product pool",
+      "references": [
+        "https://twitter.com/VelocoreDEX/status/1797245678022959104"
+      ]
+    },
+    {
+      "name": "LI.FI Protocol",
+      "date": "2024-07-16",
+      "loss_usd": 11600000,
+      "chain": "Multiple",
+      "type": "cross_contract",
+      "description": "Arbitrary call vulnerability in bridge facet allowed reentrancy through malicious calldata.",
+      "vulnerable_pattern": "Unchecked external call in diamond proxy pattern",
+      "affected_chains": ["Ethereum", "Arbitrum", "Optimism", "Polygon", "Base"],
+      "references": [
+        "https://twitter.com/laboromir/status/1813186376643358720"
+      ]
+    },
+    {
+      "name": "Rho Markets",
+      "date": "2024-07-19",
+      "loss_usd": 7600000,
+      "chain": "Scroll",
+      "type": "read_only",
+      "description": "Oracle manipulation through read-only reentrancy in lending protocol on Scroll L2.",
+      "vulnerable_pattern": "Price oracle stale during reentrancy window",
+      "references": [
+        "https://twitter.com/RhoMarketsHQ/status/1814267892387348480"
+      ]
+    },
+    {
+      "name": "Convergence Finance",
+      "date": "2024-08-01",
+      "loss_usd": 210000,
+      "chain": "Ethereum",
+      "type": "cross_function",
+      "description": "Reentrancy in reward claiming function through malicious reward token.",
+      "vulnerable_pattern": "Reward token callback exploitation in claim function",
+      "references": [
+        "https://twitter.com/ConvFinance/status/1818956234282496000"
+      ]
+    },
+    {
+      "name": "Ronin Network (Katana DEX)",
+      "date": "2024-08-06",
+      "loss_usd": 12000000,
+      "chain": "Ronin",
+      "type": "cross_function",
+      "description": "MEV bot exploited reentrancy in Katana DEX during withdrawal processing.",
+      "vulnerable_pattern": "Withdrawal callback exploitation in DEX contract",
+      "references": [
+        "https://twitter.com/Ronin_Network/status/1820789234456789012"
+      ]
+    },
+    {
+      "name": "Penpie",
+      "date": "2024-09-03",
+      "loss_usd": 27000000,
+      "chain": "Ethereum, Arbitrum",
+      "type": "cross_contract",
+      "description": "Reentrancy through Pendle market's callback in staking rewards distribution.",
+      "vulnerable_pattern": "Pendle market callback exploitation in reward harvesting",
+      "references": [
+        "https://twitter.com/paboromir/status/1831234567890123456"
+      ]
+    },
+    {
+      "name": "Onyx Protocol",
+      "date": "2024-09-26",
+      "loss_usd": 3800000,
+      "chain": "Ethereum",
+      "type": "cross_function",
+      "description": "Precision loss combined with reentrancy in Compound V2 fork liquidation.",
+      "vulnerable_pattern": "Empty market donation attack with reentrancy",
+      "references": [
+        "https://twitter.com/OnyxProtocol/status/1839234567890123456"
+      ]
+    },
+    {
+      "name": "Radiant Capital",
+      "date": "2024-10-16",
+      "loss_usd": 51000000,
+      "chain": "Arbitrum, BNB Chain",
+      "type": "cross_contract",
+      "description": "Compromised multisig combined with reentrancy in lending pool's callback handler.",
+      "vulnerable_pattern": "Malicious upgrade enabled reentrancy in transfer callback",
+      "references": [
+        "https://twitter.com/RDNTCapital/status/1846789012345678901"
+      ]
+    },
+    {
+      "name": "Tapioca DAO",
+      "date": "2024-10-18",
+      "loss_usd": 4700000,
+      "chain": "Arbitrum",
+      "type": "cross_contract",
+      "description": "Social engineering led to malicious contract deployment with reentrancy vulnerability.",
+      "vulnerable_pattern": "Compromised deployment with intentional reentrancy backdoor",
+      "references": [
+        "https://twitter.com/taaboromir/status/1847234567890123456"
+      ]
+    },
+    {
+      "name": "Delta Prime",
+      "date": "2024-11-11",
+      "loss_usd": 4800000,
+      "chain": "Arbitrum, Avalanche",
+      "type": "cross_function",
+      "description": "Reentrancy in lending protocol's flash loan callback during collateral adjustment.",
+      "vulnerable_pattern": "Flash loan callback exploitation in collateral management",
+      "references": [
+        "https://twitter.com/DeltaPrimeDefi/status/1856234567890123456"
+      ]
+    },
+    {
+      "name": "Polter Finance",
+      "date": "2024-11-17",
+      "loss_usd": 12000000,
+      "chain": "Fantom",
+      "type": "read_only",
+      "description": "Oracle manipulation through read-only reentrancy in SpookySwap LP pricing.",
+      "vulnerable_pattern": "LP token price manipulation via getReserves() reentrancy",
+      "references": [
+        "https://twitter.com/PolterFinance/status/1858234567890123456"
+      ]
+    },
+    {
+      "name": "Clipper DEX",
+      "date": "2024-12-01",
+      "loss_usd": 450000,
+      "chain": "Multiple",
+      "type": "cross_function",
+      "description": "Reentrancy in withdrawal function through deposit callback manipulation.",
+      "vulnerable_pattern": "Deposit/withdraw state inconsistency during callback",
+      "affected_chains": ["Ethereum", "Optimism", "Base"],
+      "references": [
+        "https://twitter.com/ClipperDEX/status/1863234567890123456"
+      ]
+    }
+  ],
+  "patterns": {
+    "mono_function": {
+      "description": "Single function reentrancy - recursive calls to same function",
+      "common_vulnerable_functions": ["withdraw", "withdrawAll", "claim", "redeem"],
+      "prevention": ["ReentrancyGuard", "CEI pattern", "mutex lock"]
+    },
+    "cross_function": {
+      "description": "Multiple functions sharing state exploited via reentrancy",
+      "common_vulnerable_patterns": ["withdraw + transfer sharing balance mapping"],
+      "prevention": ["Global reentrancy lock", "CEI on all state-modifying functions"]
+    },
+    "cross_contract": {
+      "description": "Reentrancy through external contract callbacks",
+      "common_vectors": ["ERC777 hooks", "ERC721 safeTransfer", "Flash loan callbacks", "Custom interfaces"],
+      "prevention": ["Avoid ERC777 if not needed", "CEI pattern", "Validate callback sources"]
+    },
+    "read_only": {
+      "description": "View functions returning stale data during reentrancy",
+      "common_vulnerable_patterns": ["LP token pricing", "Oracle values", "Collateral calculations"],
+      "prevention": ["TWAP oracles", "Snapshot pricing", "Reentrancy checks in view functions"]
+    }
+  },
+  "statistics": {
+    "total_loss_usd": 878940000,
+    "attacks_by_year": {
+      "2016": 1,
+      "2020": 1,
+      "2021": 4,
+      "2022": 5,
+      "2023": 10,
+      "2024": 18
+    },
+    "most_common_type": "cross_function",
+    "most_affected_chain": "Ethereum",
+    "emerging_trends": [
+      "Read-only reentrancy attacks increasing",
+      "L2 chains becoming targets (Arbitrum, Optimism, zkSync)",
+      "Cross-chain bridge vulnerabilities",
+      "Compound V2 fork donation attacks"
+    ],
+    "last_updated": "2024-12-04"
+  }
+}

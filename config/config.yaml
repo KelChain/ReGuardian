@@ -1,0 +1,121 @@
+# ReGuardian Configuration
+# ========================
+
+# Analysis Settings
+analysis:
+  # Analysis mode: quick, standard, deep, full
+  mode: standard
+  
+  # Reentrancy types to check
+  detectors:
+    mono_function: true
+    cross_function: true
+    cross_contract: true
+    read_only: true
+  
+  # Minimum severity to report: informational, low, medium, high, critical
+  min_severity: low
+  
+  # Generate fix suggestions
+  generate_fixes: true
+  
+  # Include reference links
+  include_references: true
+
+# OpenZeppelin Integration
+openzeppelin:
+  # Check if contracts use ReentrancyGuard
+  check_reentrancy_guard: true
+  
+  # Suggest OpenZeppelin fixes
+  suggest_oz_fixes: true
+  
+  # Preferred OpenZeppelin version
+  version: "4.x"
+
+# Slither Configuration
+slither:
+  # Solidity compiler version (auto-detect if not specified)
+  solc_version: null
+  
+  # Detectors to run (null = all reentrancy detectors)
+  detectors:
+    - reentrancy-eth
+    - reentrancy-no-eth
+    - reentrancy-benign
+    - reentrancy-events
+    - reentrancy-unlimited-gas
+  
+  # Paths to exclude from analysis
+  exclude_paths:
+    - node_modules
+    - test
+    - tests
+    - mock
+
+# Mythril Configuration
+mythril:
+  # Execution timeout in seconds
+  execution_timeout: 300
+  
+  # Maximum exploration depth
+  max_depth: 50
+  
+  # SMT solver timeout in milliseconds
+  solver_timeout: 25000
+  
+  # Number of transactions to explore
+  transaction_count: 3
+
+# Output Settings
+output:
+  # Default output format: console, json, html
+  format: console
+  
+  # Color output in console
+  color: true
+  
+  # Verbosity level: 0 (quiet), 1 (normal), 2 (verbose)
+  verbosity: 1
+  
+  # Save reports to this directory
+  reports_dir: ./reports
+
+# Project Scanning
+scan:
+  # File extensions to analyze
+  extensions:
+    - .sol
+    - .vy
+  
+  # Directories to skip
+  skip_dirs:
+    - node_modules
+    - lib
+    - test
+    - tests
+    - mock
+    - mocks
+    - interfaces
+  
+  # Maximum file size to analyze (bytes)
+  max_file_size: 1048576  # 1MB
+
+# AI/ML Settings (Future)
+ai:
+  # Enable AI-based detection
+  enabled: false
+  
+  # Model to use
+  model: null
+  
+  # Confidence threshold
+  min_confidence: 0.7
+
+# Logging
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: INFO
+  
+  # Log file (null = console only)
+  file: null

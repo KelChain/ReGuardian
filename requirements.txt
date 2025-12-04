@@ -1,0 +1,47 @@
+# ReGuardian Dependencies
+# Core Analysis
+slither-analyzer>=0.10.0
+mythril>=0.24.0
+crytic-compile>=0.3.0
+solc-select>=1.0.0
+
+# Web3 & Ethereum
+web3>=6.0.0,<7.0.0
+eth-abi>=4.0.0,<5.0.0
+py-solc-x>=1.1.0,<2.0.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+networkx>=3.0  # For control flow graphs
+
+# AI/ML (Optional - for advanced detection)
+torch>=2.0.0
+transformers>=4.30.0
+scikit-learn>=1.3.0
+
+# API & Web Interface
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+
+# Reporting
+jinja2>=3.1.0
+markdown>=3.4.0
+pygments>=2.15.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+
+# Utilities
+pyyaml>=6.0.0
+click>=8.1.0
+rich>=13.0.0  # Beautiful terminal output
+python-dotenv>=1.0.0
+
+# Development
+black>=23.0.0
+isort>=5.12.0
+mypy>=1.4.0

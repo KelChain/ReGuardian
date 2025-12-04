@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReGuardian - Smart Contract Security Scanner</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap');
+        
+        * { font-family: 'Inter', sans-serif; }
+        code, .CodeMirror { font-family: 'JetBrains Mono', monospace !important; }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .CodeMirror {
+            height: 400px !important;
+            border-radius: 0.5rem;
+            font-size: 14px;
+        }
+        
+        .severity-critical { background: #dc2626; }
+        .severity-high { background: #ea580c; }
+        .severity-medium { background: #ca8a04; }
+        .severity-low { background: #2563eb; }
+        .severity-info { background: #6b7280; }
+        
+        .pulse { animation: pulse 2s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .spin { animation: spin 1s linear infinite; }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e1e2e; }
+        ::-webkit-scrollbar-thumb { background: #4a4a6a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6a6a8a; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg py-6 px-4 shadow-lg">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="text-4xl">🛡️</span>
+                <div>
+                    <h1 class="text-2xl font-bold text-white">ReGuardian</h1>
+                    <p class="text-purple-200 text-sm">AI-Powered Reentrancy Detection</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="https://github.com/YOUR_USERNAME/ReGuardian" target="_blank" 
+                   class="text-white/80 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                </a>
+                <a href="/docs" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-white text-sm font-medium transition">
+                    API Docs
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Stats Bar -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="glass rounded-xl p-4 text-center">
+                <div class="text-3xl font-bold text-purple-400">$879M+</div>
+                <div class="text-gray-400 text-sm">Total Losses from Attacks</div>
+            </div>
+            <div class="glass rounded-xl p-4 text-center">
+                <div class="text-3xl font-bold text-blue-400">4</div>
+                <div class="text-gray-400 text-sm">Detection Types</div>
+            </div>
+            <div class="glass rounded-xl p-4 text-center">
+                <div class="text-3xl font-bold text-green-400">3</div>
+                <div class="text-gray-400 text-sm">Analysis Engines</div>
+            </div>
+            <div class="glass rounded-xl p-4 text-center">
+                <div class="text-3xl font-bold text-orange-400">39</div>
+                <div class="text-gray-400 text-sm">Documented Attacks</div>
+            </div>
+        </div>
+
+        <!-- Main Scanner Section -->
+        <div class="grid lg:grid-cols-2 gap-6">
+            <!-- Left: Code Input -->
+            <div class="glass rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold flex items-center gap-2">
+                        <span class="text-purple-400">📝</span>
+                        Smart Contract Code
+                    </h2>
+                    <div class="flex gap-2">
+                        <button onclick="loadExample('vulnerable')" 
+                                class="text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-full hover:bg-red-500/30 transition">
+                            Load Vulnerable
+                        </button>
+                        <button onclick="loadExample('safe')"
+                                class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full hover:bg-green-500/30 transition">
+                            Load Safe
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- File Upload -->
+                <div class="mb-4">
+                    <label class="flex items-center justify-center w-full h-20 border-2 border-dashed border-gray-600 rounded-xl cursor-pointer hover:border-purple-500 hover:bg-purple-500/5 transition"
+                           id="drop-zone">
+                        <div class="text-center">
+                            <span class="text-2xl">📁</span>
+                            <p class="text-gray-400 text-sm">Drop .sol file here or <span class="text-purple-400">browse</span></p>
+                        </div>
+                        <input type="file" accept=".sol,.vy" class="hidden" id="file-input">
+                    </label>
+                </div>
+                
+                <!-- Code Editor -->
+                <div class="rounded-lg overflow-hidden border border-gray-700">
+                    <textarea id="code-editor"></textarea>
+                </div>
+                
+                <!-- Analysis Options -->
+                <div class="mt-4 flex flex-wrap gap-4">
+                    <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                        <input type="checkbox" id="opt-slither" checked class="rounded bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500">
+                        Slither
+                    </label>
+                    <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                        <input type="checkbox" id="opt-ml" checked class="rounded bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500">
+                        ML Detection
+                    </label>
+                    <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                        <input type="checkbox" id="opt-mythril" class="rounded bg-gray-700 border-gray-600 text-purple-500 focus:ring-purple-500" onchange="toggleMythrilWarning()">
+                        Mythril (Deep)
+                    </label>
+                </div>
+                
+                <!-- Mythril Warning -->
+                <div id="mythril-warning" class="hidden mt-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 text-sm text-yellow-300">
+                    ⚠️ Mythril uses symbolic execution and may take 5-10 minutes. The scan will still complete.
+                </div>
+                
+                <!-- Scan Button -->
+                <button onclick="runAnalysis()" id="scan-btn"
+                        class="w-full mt-6 gradient-bg text-white font-semibold py-4 rounded-xl hover:opacity-90 transition flex items-center justify-center gap-2">
+                    🔍 Scan for Vulnerabilities
+                </button>
+            </div>
+
+            <!-- Right: Results -->
+            <div class="glass rounded-2xl p-6">
+                <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
+                    <span class="text-purple-400">📊</span>
+                    Analysis Results
+                </h2>
+                
+                <div id="results-container">
+                    <!-- Initial State -->
+                    <div id="initial-state" class="text-center py-16">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center">
+                            <span class="text-5xl">🔐</span>
+                        </div>
+                        <p class="text-gray-500">Paste your contract code and click scan</p>
+                        <p class="text-gray-600 text-sm mt-2">Supports Solidity (.sol) and Vyper (.vy)</p>
+                    </div>
+                    
+                    <!-- Loading State -->
+                    <div id="loading-state" class="hidden text-center py-12">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-purple-500/20 flex items-center justify-center">
+                            <span class="text-4xl spin inline-block">⚙️</span>
+                        </div>
+                        <p class="text-purple-400 font-medium" id="loading-title">Analyzing contract...</p>
+                        <p class="text-gray-500 text-sm mt-2" id="loading-status">Running security checks...</p>
+                        
+                        <!-- Progress Bar -->
+                        <div class="mt-6 px-4">
+                            <div class="flex justify-between text-xs text-gray-500 mb-1">
+                                <span id="current-step">Initializing...</span>
+                                <span id="progress-percent">0%</span>
+                            </div>
+                            <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                                <div id="progress-bar" class="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-600 mt-2">
+                                <span id="loading-timer">Elapsed: 0s</span>
+                                <span id="time-estimate">Est: ~3s remaining</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Tool Status -->
+                        <div class="mt-6 space-y-2 text-left px-4" id="tool-status">
+                            <div class="flex items-center gap-2 text-sm" id="status-custom">
+                                <span class="w-4 h-4 rounded-full bg-gray-600" id="dot-custom"></span>
+                                <span class="text-gray-500">Custom Detectors</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm" id="status-ml">
+                                <span class="w-4 h-4 rounded-full bg-gray-600" id="dot-ml"></span>
+                                <span class="text-gray-500">ML Analysis</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm" id="status-slither">
+                                <span class="w-4 h-4 rounded-full bg-gray-600" id="dot-slither"></span>
+                                <span class="text-gray-500">Slither</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm hidden" id="status-mythril">
+                                <span class="w-4 h-4 rounded-full bg-gray-600" id="dot-mythril"></span>
+                                <span class="text-gray-500">Mythril (Deep Scan)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Results State -->
+                    <div id="results-state" class="hidden">
+                        <!-- Summary Cards -->
+                        <div class="grid grid-cols-5 gap-2 mb-6">
+                            <div class="bg-red-500/20 rounded-lg p-3 text-center">
+                                <div class="text-2xl font-bold text-red-400" id="count-critical">0</div>
+                                <div class="text-xs text-red-300">Critical</div>
+                            </div>
+                            <div class="bg-orange-500/20 rounded-lg p-3 text-center">
+                                <div class="text-2xl font-bold text-orange-400" id="count-high">0</div>
+                                <div class="text-xs text-orange-300">High</div>
+                            </div>
+                            <div class="bg-yellow-500/20 rounded-lg p-3 text-center">
+                                <div class="text-2xl font-bold text-yellow-400" id="count-medium">0</div>
+                                <div class="text-xs text-yellow-300">Medium</div>
+                            </div>
+                            <div class="bg-blue-500/20 rounded-lg p-3 text-center">
+                                <div class="text-2xl font-bold text-blue-400" id="count-low">0</div>
+                                <div class="text-xs text-blue-300">Low</div>
+                            </div>
+                            <div class="bg-gray-500/20 rounded-lg p-3 text-center">
+                                <div class="text-2xl font-bold text-gray-400" id="count-info">0</div>
+                                <div class="text-xs text-gray-300">Info</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Risk Score -->
+                        <div class="bg-gray-800/50 rounded-xl p-4 mb-6">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-gray-400 text-sm">Risk Score</span>
+                                <span class="font-bold" id="risk-score-text">0%</span>
+                            </div>
+                            <div class="h-3 bg-gray-700 rounded-full overflow-hidden">
+                                <div id="risk-score-bar" class="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Findings List -->
+                        <div class="space-y-3 max-h-80 overflow-y-auto" id="findings-list">
+                        </div>
+                        
+                        <!-- Export Buttons -->
+                        <div class="flex gap-3 mt-6">
+                            <button onclick="exportJSON()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg text-sm transition flex items-center justify-center gap-2">
+                                📥 Export JSON
+                            </button>
+                            <button onclick="exportHTML()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg text-sm transition flex items-center justify-center gap-2">
+                                📄 Export Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attack Database Section -->
+        <div class="mt-8 glass rounded-2xl p-6">
+            <h2 class="text-xl font-semibold flex items-center gap-2 mb-4">
+                <span class="text-purple-400">📚</span>
+                Historical Reentrancy Attacks
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-gray-400 border-b border-gray-700">
+                            <th class="pb-3 font-medium">Protocol</th>
+                            <th class="pb-3 font-medium">Date</th>
+                            <th class="pb-3 font-medium">Loss</th>
+                            <th class="pb-3 font-medium">Type</th>
+                            <th class="pb-3 font-medium">Chain</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attacks-table" class="divide-y divide-gray-800">
+                        <tr class="text-gray-300">
+                            <td class="py-3 font-medium">Euler Finance</td>
+                            <td class="py-3">Mar 2023</td>
+                            <td class="py-3 text-red-400 font-medium">$197M</td>
+                            <td class="py-3"><span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">Cross-Function</span></td>
+                            <td class="py-3">Ethereum</td>
+                        </tr>
+                        <tr class="text-gray-300">
+                            <td class="py-3 font-medium">Cream Finance</td>
+                            <td class="py-3">Oct 2021</td>
+                            <td class="py-3 text-red-400 font-medium">$130M</td>
+                            <td class="py-3"><span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">Cross-Contract</span></td>
+                            <td class="py-3">Ethereum</td>
+                        </tr>
+                        <tr class="text-gray-300">
+                            <td class="py-3 font-medium">Vyper/Curve</td>
+                            <td class="py-3">Jul 2023</td>
+                            <td class="py-3 text-red-400 font-medium">$73M</td>
+                            <td class="py-3"><span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">Compiler Bug</span></td>
+                            <td class="py-3">Ethereum</td>
+                        </tr>
+                        <tr class="text-gray-300">
+                            <td class="py-3 font-medium">The DAO</td>
+                            <td class="py-3">Jun 2016</td>
+                            <td class="py-3 text-red-400 font-medium">$60M</td>
+                            <td class="py-3"><span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">Classic</span></td>
+                            <td class="py-3">Ethereum</td>
+                        </tr>
+                        <tr class="text-gray-300">
+                            <td class="py-3 font-medium">Radiant Capital</td>
+                            <td class="py-3">Oct 2024</td>
+                            <td class="py-3 text-red-400 font-medium">$51M</td>
+                            <td class="py-3"><span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">Cross-Contract</span></td>
+                            <td class="py-3">Arbitrum</td>
+                        </tr>
+                        <tr class="text-gray-300">
+                            <td class="py-3 font-medium">KyberSwap</td>
+                            <td class="py-3">Nov 2023</td>
+                            <td class="py-3 text-red-400 font-medium">$49M</td>
+                            <td class="py-3"><span class="bg-purple-500/20 text-purple-300 px-2 py-1 rounded text-xs">Cross-Function</span></td>
+                            <td class="py-3">Multiple</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800 mt-12 py-8 text-center text-gray-500 text-sm">
+        <p>ReGuardian v0.1.0 - AI-Powered Smart Contract Security</p>
+        <p class="mt-2">Built with Slither, Mythril, and OpenZeppelin patterns</p>
+    </footer>
+
+    <!-- Finding Detail Modal -->
+    <div id="modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50 p-4" onclick="if(event.target.id==='modal')closeModal()">
+        <div class="bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold" id="modal-title">Finding Details</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div id="modal-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Example contracts - MUST be defined first
+        const examples = {
+            vulnerable: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract VulnerableWallet {
+    mapping(address => uint256) public balances;
+    
+    function deposit() public payable {
+        balances[msg.sender] += msg.value;
+    }
+    
+    // VULNERABLE: External call before state update
+    function withdraw() public {
+        uint256 balance = balances[msg.sender];
+        require(balance > 0, "No balance");
+        
+        (bool success, ) = msg.sender.call{value: balance}("");
+        require(success, "Transfer failed");
+        
+        balances[msg.sender] = 0; // Too late!
+    }
+}`,
+            safe: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
+contract SecureWallet is ReentrancyGuard {
+    mapping(address => uint256) public balances;
+    
+    function deposit() public payable {
+        balances[msg.sender] += msg.value;
+    }
+    
+    // SECURE: Uses ReentrancyGuard + CEI pattern
+    function withdraw() public nonReentrant {
+        uint256 balance = balances[msg.sender];
+        require(balance > 0, "No balance");
+        
+        balances[msg.sender] = 0; // Effects first
+        
+        (bool success, ) = msg.sender.call{value: balance}("");
+        require(success, "Transfer failed");
+    }
+}`
+        };
+
+        // Initialize CodeMirror
+        const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+            mode: 'javascript',
+            theme: 'dracula',
+            lineNumbers: true,
+            lineWrapping: true,
+        });
+
+        // API base URL
+        const API_URL = window.location.origin;
+
+        // Store last results for export
+        let lastResults = null;
+        let scanTimer = null;
+        let progressTimer = null;
+        let scanStartTime = null;
+
+        function loadExample(type) {
+            editor.setValue(examples[type]);
+        }
+
+        function toggleMythrilWarning() {
+            const warning = document.getElementById('mythril-warning');
+            const checked = document.getElementById('opt-mythril').checked;
+            warning.classList.toggle('hidden', !checked);
+        }
+
+        // Estimate contract complexity based on code size
+        function estimateComplexity(code) {
+            const lines = code.split('\n').length;
+            const functions = (code.match(/function\s+\w+/g) || []).length;
+            const externalCalls = (code.match(/\.call\{|\.transfer\(|\.send\(/g) || []).length;
+            
+            // Base complexity score
+            let complexity = 1;
+            if (lines > 100) complexity += 0.5;
+            if (lines > 300) complexity += 0.5;
+            if (functions > 5) complexity += 0.3;
+            if (functions > 10) complexity += 0.3;
+            if (externalCalls > 2) complexity += 0.4;
+            
+            return Math.min(complexity, 3); // Cap at 3x
+        }
+
+        function startTimer(useMythril, codeComplexity) {
+            scanStartTime = Date.now();
+            
+            // Estimated times per tool (in seconds)
+            const baseTimes = {
+                custom: 0.5,
+                ml: 0.3,
+                slither: 3,
+                mythril: 420  // 7 minutes base for Mythril
+            };
+            
+            // Adjust for complexity
+            const times = {
+                custom: baseTimes.custom * codeComplexity,
+                ml: baseTimes.ml * codeComplexity,
+                slither: baseTimes.slither * codeComplexity,
+                mythril: baseTimes.mythril * codeComplexity
+            };
+            
+            // Calculate total estimated time
+            let totalEstimate = times.custom + times.ml + times.slither;
+            if (useMythril) totalEstimate += times.mythril;
+            
+            // Tool milestones (cumulative percentages)
+            const milestones = useMythril ? {
+                custom: { end: 1, time: times.custom },
+                ml: { end: 2, time: times.custom + times.ml },
+                slither: { end: 5, time: times.custom + times.ml + times.slither },
+                mythril: { end: 100, time: totalEstimate }
+            } : {
+                custom: { end: 15, time: times.custom },
+                ml: { end: 25, time: times.custom + times.ml },
+                slither: { end: 100, time: totalEstimate }
+            };
+            
+            // Show/hide Mythril status
+            document.getElementById('status-mythril').classList.toggle('hidden', !useMythril);
+            
+            // Reset all dots
+            ['custom', 'ml', 'slither', 'mythril'].forEach(tool => {
+                const dot = document.getElementById('dot-' + tool);
+                if (dot) {
+                    dot.className = 'w-4 h-4 rounded-full bg-gray-600';
+                }
+            });
+            
+            let currentTool = 'custom';
+            
+            scanTimer = setInterval(() => {
+                const elapsed = (Date.now() - scanStartTime) / 1000;
+                const remaining = Math.max(0, totalEstimate - elapsed);
+                
+                // Update timer display
+                document.getElementById('loading-timer').textContent = `Elapsed: ${Math.floor(elapsed)}s`;
+                
+                // Update time estimate
+                if (remaining > 60) {
+                    const mins = Math.floor(remaining / 60);
+                    const secs = Math.floor(remaining % 60);
+                    document.getElementById('time-estimate').textContent = `Est: ~${mins}m ${secs}s remaining`;
+                } else {
+                    document.getElementById('time-estimate').textContent = `Est: ~${Math.floor(remaining)}s remaining`;
+                }
+                
+                // Calculate progress percentage
+                let progress = Math.min(95, (elapsed / totalEstimate) * 100);
+                document.getElementById('progress-bar').style.width = progress + '%';
+                document.getElementById('progress-percent').textContent = Math.floor(progress) + '%';
+                
+                // Update current step and tool status
+                let stepName = 'Finalizing...';
+                
+                if (elapsed < milestones.custom.time) {
+                    stepName = 'Running custom detectors...';
+                    currentTool = 'custom';
+                    document.getElementById('dot-custom').className = 'w-4 h-4 rounded-full bg-yellow-500 animate-pulse';
+                } else if (elapsed < milestones.ml.time) {
+                    stepName = 'Running ML analysis...';
+                    document.getElementById('dot-custom').className = 'w-4 h-4 rounded-full bg-green-500';
+                    document.getElementById('dot-ml').className = 'w-4 h-4 rounded-full bg-yellow-500 animate-pulse';
+                    currentTool = 'ml';
+                } else if (elapsed < milestones.slither.time) {
+                    stepName = 'Running Slither static analysis...';
+                    document.getElementById('dot-custom').className = 'w-4 h-4 rounded-full bg-green-500';
+                    document.getElementById('dot-ml').className = 'w-4 h-4 rounded-full bg-green-500';
+                    document.getElementById('dot-slither').className = 'w-4 h-4 rounded-full bg-yellow-500 animate-pulse';
+                    currentTool = 'slither';
+                } else if (useMythril && elapsed < milestones.mythril.time) {
+                    stepName = 'Running Mythril symbolic execution...';
+                    document.getElementById('dot-custom').className = 'w-4 h-4 rounded-full bg-green-500';
+                    document.getElementById('dot-ml').className = 'w-4 h-4 rounded-full bg-green-500';
+                    document.getElementById('dot-slither').className = 'w-4 h-4 rounded-full bg-green-500';
+                    document.getElementById('dot-mythril').className = 'w-4 h-4 rounded-full bg-yellow-500 animate-pulse';
+                    currentTool = 'mythril';
+                }
+                
+                document.getElementById('current-step').textContent = stepName;
+                
+            }, 500);
+        }
+
+        function stopTimer() {
+            if (scanTimer) {
+                clearInterval(scanTimer);
+                scanTimer = null;
+            }
+            // Mark all visible tools as complete
+            ['custom', 'ml', 'slither', 'mythril'].forEach(tool => {
+                const dot = document.getElementById('dot-' + tool);
+                const status = document.getElementById('status-' + tool);
+                if (dot && status && !status.classList.contains('hidden')) {
+                    dot.className = 'w-4 h-4 rounded-full bg-green-500';
+                }
+            });
+            document.getElementById('progress-bar').style.width = '100%';
+            document.getElementById('progress-percent').textContent = '100%';
+            document.getElementById('current-step').textContent = 'Complete!';
+        }
+
+        // File upload handling
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-purple-500', 'bg-purple-500/10');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-purple-500', 'bg-purple-500/10');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-purple-500', 'bg-purple-500/10');
+            const file = e.dataTransfer.files[0];
+            if (file) readFile(file);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) readFile(file);
+        });
+
+        function readFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => editor.setValue(e.target.result);
+            reader.readAsText(file);
+        }
+
+        async function runAnalysis() {
+            const code = editor.getValue();
+            if (!code.trim()) {
+                alert('Please enter some contract code');
+                return;
+            }
+
+            // Show loading state
+            document.getElementById('initial-state').classList.add('hidden');
+            document.getElementById('results-state').classList.add('hidden');
+            document.getElementById('loading-state').classList.remove('hidden');
+            
+            const btn = document.getElementById('scan-btn');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Scanning...';
+            
+            const useMythril = document.getElementById('opt-mythril').checked;
+            const codeComplexity = estimateComplexity(code);
+            
+            if (useMythril) {
+                document.getElementById('loading-title').textContent = 'Running deep analysis with Mythril...';
+                document.getElementById('loading-status').textContent = 'This may take 5-10 minutes...';
+            } else {
+                document.getElementById('loading-title').textContent = 'Analyzing contract...';
+                document.getElementById('loading-status').textContent = 'Running security checks...';
+            }
+            
+            startTimer(useMythril, codeComplexity);
+
+            try {
+                const mode = useMythril ? 'deep' : 'standard';
+                
+                const response = await fetch(`${API_URL}/analyze`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        source_code: code,
+                        contract_name: 'Contract.sol',
+                        mode: mode,
+                        min_severity: 'low',
+                        generate_fixes: true
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.text();
+                    throw new Error(err || 'Analysis failed');
+                }
+                
+                const data = await response.json();
+                lastResults = data;
+                displayResults(data);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Analysis failed: ' + error.message);
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('initial-state').classList.remove('hidden');
+            } finally {
+                stopTimer();
+                btn.disabled = false;
+                btn.innerHTML = '🔍 Scan for Vulnerabilities';
+            }
+        }
+
+        function displayResults(data) {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('results-state').classList.remove('hidden');
+            document.getElementById('results-state').classList.add('fade-in');
+
+            // Update counts
+            document.getElementById('count-critical').textContent = data.critical || 0;
+            document.getElementById('count-high').textContent = data.high || 0;
+            document.getElementById('count-medium').textContent = data.medium || 0;
+            document.getElementById('count-low').textContent = data.low || 0;
+            document.getElementById('count-info').textContent = 0;
+
+            // Calculate risk score
+            const riskScore = Math.min(100, (data.critical * 40 + data.high * 25 + data.medium * 10 + data.low * 5));
+            document.getElementById('risk-score-text').textContent = riskScore + '%';
+            document.getElementById('risk-score-bar').style.width = riskScore + '%';
+
+            // Display findings
+            const findingsList = document.getElementById('findings-list');
+            findingsList.innerHTML = '';
+
+            if (data.vulnerabilities && data.vulnerabilities.length > 0) {
+                data.vulnerabilities.forEach((vuln, index) => {
+                    const severityClass = `severity-${vuln.severity.toLowerCase()}`;
+                    const severityEmoji = {
+                        'critical': '🔴',
+                        'high': '🟠',
+                        'medium': '🟡',
+                        'low': '🔵',
+                        'info': '⚪'
+                    }[vuln.severity.toLowerCase()] || '⚪';
+                    
+                    const html = `
+                        <div class="bg-gray-800/50 rounded-xl p-4 cursor-pointer hover:bg-gray-800 transition" onclick="showFindingDetail(${index})">
+                            <div class="flex items-start gap-3">
+                                <span class="${severityClass} text-white text-xs font-bold px-2 py-1 rounded uppercase">${vuln.severity}</span>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-medium text-white truncate">${vuln.title}</h4>
+                                    <p class="text-gray-400 text-sm mt-1 truncate">${vuln.type} • ${vuln.location?.function || 'Unknown'}</p>
+                                </div>
+                                <span class="text-gray-500">→</span>
+                            </div>
+                        </div>
+                    `;
+                    findingsList.innerHTML += html;
+                });
+            } else {
+                findingsList.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
+                            <span class="text-3xl">✅</span>
+                        </div>
+                        <p class="text-green-400 font-medium">No vulnerabilities detected!</p>
+                        <p class="text-gray-500 text-sm mt-2">Your contract appears to be safe.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function showFindingDetail(index) {
+            const vuln = lastResults.vulnerabilities[index];
+            const severityClass = `severity-${vuln.severity.toLowerCase()}`;
+            
+            document.getElementById('modal-title').innerHTML = `
+                <span class="${severityClass} text-white text-xs font-bold px-2 py-1 rounded uppercase mr-2">${vuln.severity}</span>
+                ${vuln.title}
+            `;
+            
+            document.getElementById('modal-content').innerHTML = `
+                <div class="space-y-4 text-sm">
+                    <div>
+                        <h4 class="text-gray-400 font-medium mb-1">Type</h4>
+                        <p class="text-white">${vuln.type}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-gray-400 font-medium mb-1">Location</h4>
+                        <p class="text-white">${vuln.location?.function || 'Unknown'} (Lines ${vuln.location?.line_start || '?'}-${vuln.location?.line_end || '?'})</p>
+                    </div>
+                    <div>
+                        <h4 class="text-gray-400 font-medium mb-1">Confidence</h4>
+                        <p class="text-white">${Math.round((vuln.confidence || 0) * 100)}%</p>
+                    </div>
+                    <div>
+                        <h4 class="text-gray-400 font-medium mb-1">Description</h4>
+                        <p class="text-gray-300">${vuln.description || 'No description available.'}</p>
+                    </div>
+                    ${vuln.attack_vector ? `
+                    <div>
+                        <h4 class="text-gray-400 font-medium mb-1">Attack Vector</h4>
+                        <p class="text-gray-300 whitespace-pre-line">${vuln.attack_vector}</p>
+                    </div>
+                    ` : ''}
+                    <div>
+                        <h4 class="text-gray-400 font-medium mb-1">Recommendation</h4>
+                        <p class="text-gray-300">${vuln.recommendation || 'Use ReentrancyGuard and follow CEI pattern.'}</p>
+                    </div>
+                    ${vuln.suggested_fix ? `
+                    <div>
+                        <h4 class="text-gray-400 font-medium mb-1">Suggested Fix</h4>
+                        <pre class="bg-gray-900 rounded-lg p-4 overflow-x-auto"><code class="text-green-400">${escapeHtml(vuln.suggested_fix)}</code></pre>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal').classList.remove('flex');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function exportJSON() {
+            if (!lastResults) return;
+            const blob = new Blob([JSON.stringify(lastResults, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reguardian-results.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportHTML() {
+            if (!lastResults) return;
+            const html = `<!DOCTYPE html>
+<html><head><title>ReGuardian Report</title>
+<style>body{font-family:system-ui;background:#1a1a2e;color:#eee;padding:40px;max-width:800px;margin:0 auto}
+h1{color:#667eea}.vuln{background:#16213e;padding:20px;margin:10px 0;border-radius:10px}
+.critical{border-left:4px solid #dc2626}.high{border-left:4px solid #ea580c}
+.medium{border-left:4px solid #ca8a04}.low{border-left:4px solid #2563eb}</style></head>
+<body><h1>🛡️ ReGuardian Security Report</h1>
+<p>Total Issues: ${lastResults.total_vulnerabilities}</p>
+<p>Critical: ${lastResults.critical} | High: ${lastResults.high} | Medium: ${lastResults.medium} | Low: ${lastResults.low}</p>
+<h2>Findings</h2>
+${lastResults.vulnerabilities.map(v => `<div class="vuln ${v.severity.toLowerCase()}">
+<h3>${v.severity.toUpperCase()}: ${v.title}</h3>
+<p><strong>Type:</strong> ${v.type}</p>
+<p>${v.description || ''}</p>
+<p><strong>Recommendation:</strong> ${v.recommendation || 'Use ReentrancyGuard'}</p>
+</div>`).join('')}
+<footer><p>Generated by ReGuardian</p></footer></body></html>`;
+            
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reguardian-report.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Close modal on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>

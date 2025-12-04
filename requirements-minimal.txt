@@ -1,0 +1,38 @@
+# ReGuardian Minimal Dependencies
+# Use this if mythril causes issues - it has complex dependencies
+
+# Core Analysis (Slither only - no Mythril)
+slither-analyzer>=0.10.0
+crytic-compile>=0.3.0
+solc-select>=1.0.0
+
+# Web3 & Ethereum
+web3>=6.0.0,<7.0.0
+eth-abi>=4.0.0,<5.0.0
+py-solc-x>=1.1.0,<2.0.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+networkx>=3.0
+
+# API & Web Interface
+fastapi>=0.100.0
+uvicorn>=0.23.0
+pydantic>=2.0.0
+python-multipart>=0.0.6
+
+# Reporting
+jinja2>=3.1.0
+markdown>=3.4.0
+pygments>=2.15.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+# Utilities
+pyyaml>=6.0.0
+click>=8.1.0
+rich>=13.0.0
+python-dotenv>=1.0.0
